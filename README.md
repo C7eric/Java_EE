@@ -162,9 +162,9 @@ source D:\C\Java_EE\bjpowernode.sql；
 
 
 
-  **注意**：直接使用source命令可以执行sql脚本。
+**注意**：直接使用source命令可以执行sql脚本。
 
-  sql脚本中的数据量太大的时候，无法打开，请使用source命令完成初始化。
+sql脚本中的数据量太大的时候，无法打开，请使用source命令完成初始化。
 
 
 
@@ -268,17 +268,17 @@ select  字段名1，字段名2，字段名3， ...  from 表名；
 
 给查询结果重命名
 
-​    `mysql> select ename,sal * 12 as '年薪' from emp;`
+`mysql> select ename,sal * 12 as '年薪' from emp;`
 
 别名中有中文？
 
-​    `select ename,sal * 12 as 年薪 from emp; // 错误`
+`select ename,sal * 12 as 年薪 from emp; // 错误`
 
-​    `select ename,sal * 12 as '年薪' from emp;`
+`select ename,sal * 12 as '年薪' from emp;`
 
 **注意**：标准sql语句中要求字符串使用单引号括起来。虽然mysql支持双引号，尽量别用。as关键字可以省略
 
-​    `mysql> select empno,ename,sal * 12 yearsal from emp;`
+`mysql> select empno,ename,sal * 12 yearsal from emp;`
 
 
 
@@ -302,15 +302,15 @@ select  字段名1，字段名2，字段名3， ...  from 表名；
 
 ---
 
-​    select 
+select 
 
 ​      	字段,字段...
 
-​    from
+from
 
 ​      	表名
 
-​    where
+where
 
 ​      	条件;
 
@@ -487,15 +487,15 @@ select  字段名1，字段名2，字段名3， ...  from 表名；
 
 ---
 
-  select 
+select 
 
    	 ename,sal 
 
-  from 
+from 
 
    	 emp 
 
-  order by
+order by
 
   	  sal;
 
@@ -562,21 +562,226 @@ select
 
 ​    字段            3
 
-  from
+from
 
 ​    表名            1
 
-  where
+where
 
 ​    条件            2
 
-  order by
+order by
 
 ​    ....                4
 
   
 
-  **order by是最后执行的。**
+**order by是最后执行的。**
+
+
+
+
+
+## 数据处理函数
+
+
+
+### 单行处理函数
+
+---
+
+
+
+#### 特点
+
+一个‘输入对应一个输出
+
+与单行函数相对的是：多行处理函数。（多行函数特点：多个输入，对应一个输出）
+
+
+
+#### 常见的单行处理函数
+
+##### lower
+
+转换小写
+
+`mysql> select lower(ename) from emp;`
+
+`mysql> select lower(ename) as ename from emp;`
+
+##### upper 
+
+转换大写
+
+
+
+##### substr
+
+取子串（substr（被截取的字符串，起始下标，截取的长度）
+
+`mysql> select substr(ename,1,2) as sub from emp;`
+
+
+
+###### 注意
+
+起始下标从 1  开始
+
+
+
+###### 示例
+
+`mysql> select ename from emp where substr(ename,1,1) = 'A';`
+
+查询 emp 中 名字首字母 为 A 的 人员
+
+
+
+##### concat 
+
+进行字符串的拼接
+
+`mysql> select concat(ename,empno) from emp;`
+
+
+
+###### 示例
+
+首字母小写
+
+`mysql> select concat(lower(substr(ename,1,1)),substr(ename,2,length(ename)-1)) from emp;`
+
+
+
+##### length 
+
+取长度
+
+`mysql> select length(ename) as enamelength from emp;`
+
+
+
+##### trim 
+
+去空格
+
+`mysql> select ename from emp where ename = '  KING';  
+
+`mysql> select * from emp where ename = trim('   KING');`
+
+
+
+##### str_to_date
+
+将字符串转换成日期
+
+
+
+##### date_format
+
+格式化日期
+
+
+
+##### format
+
+设置千分位
+
+
+
+##### round 
+
+四舍五入
+
+```mysql
+mysql> select abs from emp;
+ERROR 1054 (42S22): Unknown column 'abs' in 'field list'
+```
+
+这样肯定报错，因为会把 abc 当作一个字段的名字，去 emp 表中去找 abc 字段
+
+
+
+###### 引入
+
+`mysql> select 'csq' from emp;`
+
+select 后面可以跟某个表的字段名（可以等同看作变量名），也可以跟字面量/字面值（数据）
+
+
+
+`mysql> select round(12524.365,0) from emp;`
+
+`mysql> select round(12524.365,1) from emp;` 保留一位小数
+
+`mysql> select round(12524.365,-1) from emp;`保留十位
+
+`mysql> select round(rand() * 100,1) from emp;` 100 以内的随机数
+
+
+
+##### iffull
+
+可以将 null 转换为一个具体值
+
+ifnull 是空处理函数，专门处理空的。
+
+在所有数据库当中，只要有 null 参与的数学运算，最终结果就是 null
+
+`mysql> select ename ,sal + comm  as salcomm from emp;`
+
+<img src="C:\Users\CSQ-PC\AppData\Roaming\Typora\typora-user-images\image-20220709222152642.png" alt="image-20220709222152642" style="zoom:33%;" />
+
+
+
+###### 示例
+
+计算每个员工的年薪
+
+年薪 = （月薪 + 月补助）* 12 
+
+`mysql> select ename , (sal + comm) * 12 as yearsal  from emp;`  // error
+
+**null 只要参与运算，最终结果一定是 null ,为了避免这个现象，需要使用  ifnull 函数**.
+
+<img src="C:\Users\CSQ-PC\AppData\Roaming\Typora\typora-user-images\image-20220709232249769.png" alt="image-20220709232249769" style="zoom:33%;" />
+
+
+
+###### 用法
+
+ifnull(数据，被当作哪个值)
+
+`mysql> select ename,(sal + ifnull(comm,0)) * 12 yearsal from emp;`
+
+##### rand
+
+生成随机数
+
+`mysql> select rand() from emp;`
+
+`mysql> select round(rand() * 100,1) from emp;` 100 以内的随机数
+
+
+
+##### case..when..then..when..then..else..end
+
+###### 案例  
+
+当员工的工作岗位是 MANAGER时，工资上调 10 % 。 当员工的工作岗位是 SALESMAN 时，工资上调 50 % 。（注意：不修改数据库，只是将查询结果显示为工资上调）
+
+```mysql
+mysql> select
+    -> ename,
+    -> job,
+    -> (case job when 'MANAGER' then sal * 1.1
+    -> when 'SALESMAN' then sal * 1.5
+    -> else sal end)
+    -> as newsal
+    -> from
+    -> 		emp;
+```
 
 
 
@@ -584,11 +789,66 @@ select
 
 
 
+## 分组函数
 
 
 
+### 多行处理函数
+
+---
 
 
+
+#### 特点
+
+- 输入多行，最终 输出一行
+- 分组函数在使用的时候，必须先进行分组，然后才能用
+- 如果不进行分组，整张表默认为一组
+
+
+
+#### 常用函数
+
+##### count
+
+计数
+
+
+
+##### sum
+
+求和
+
+
+
+##### avg 
+
+求平均值
+
+ 
+
+##### max
+
+最大值
+
+`select max(sal) from emp;`
+
+##### min
+
+最小值
+
+`mysql> select min(sal) from emp;`
+
+
+
+#### 注意事项
+
+- 分组函数自动忽略 null，不需要提前对 bull  进行处理
+- count (*)  和 count(字段) 有什么区别
+  - count（具体字段) ： 表示统计该字段下 所有不为 null 的元素总数
+  - count（*）：统计表中的总行数（只要有一行数据，count++)【因为每一行记录不可能 全为 null.数据中有一列不为 null ,则这行数据就是有效的)
+- 分组函数不能直接使用在 where 子句中
+- 所有的分组函数可以组合起来一起用
 
 
 
