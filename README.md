@@ -860,6 +860,92 @@ mysql> select
 
 
 
+## 分组查询
+
+分组查询主要涉及到两个子句，分别是 group by  和  having
+
+
+
+### group by
+
+---
+
+- 取得每个工作岗位的工资合计，要求显示岗位名称和工资合计
+
+  `select job,sum(sal) from emp group by job;`
+
+  **如果使用了 order by,order by 必须放在 group  by 后面**
+
+  
+
+- 按照工作岗位和部门编码分组，取得的工资合计
+
+  `mysql> select job,sum(sal) from emp group by deptno,job;`
+
+  在SQL语句中若有group by 语句，那么在select语句后面只能跟**分组函数** + **参与分组的字段**。
+
+
+
+
+
+### having
+
+---
+
+如果想对分组数据再进行过滤需要使用having子句
+
+
+
+- 取得每个岗位的平均工资大于两千
+
+  `mysql> select job,avg(sal) from emp group by job having avg(sal) > 2000;`
+
+
+
+
+
+### 分组函数的执行顺序
+
+---
+
+- 根据条件查询数据
+- 分组
+- 采用having过滤，取得正确的数据
+
+
+
+
+
+### select 语句总结
+
+---
+
+#### 完整的 select 语句
+
+```mysql
+select 字段
+from 表名
+where …….
+group by ……..
+having …….(就是为了过滤分组后的数据而存在的—不可以单独的出现)
+order by ……..
+```
+
+
+
+#### 执行顺序
+
+1.  首先执行where语句过滤原始数据
+2.  执行group by进行分组
+3.  执行having对分组数据进行操作
+4.  执行select选出数据
+5. 执行order by排序
+
+
+
+#### 原则
+
+能在where中过滤的数据，尽量在where中过滤，效率较高。having的过滤是专门对分组之后的数据进行过滤的。
 
 
 
@@ -867,30 +953,221 @@ mysql> select
 
 
 
+## 连接查询
+
+
+
+### SQL92 语法
+
+---
+
+也可以叫跨表查询，需要关联多个表进行查询
+
+
+
+- 显示每个员工信息，并显示所属的部门名称
+
+  `select ename, dname from emp, dept;`
+
+  以上语句不正确，会输出56条语句，其实就是两张表记录的成绩，这种情况我们称为 笛卡尔积 现象，出现错误的原因是 没有指定连接条件
+
+  **指定连接条件**
+
+  `mysql> select e.ename,d.dname from emp e,dept d where e.deptno = d.deptno;`
+
+   
+
+  以上查询也称为 “内连接”，只查询相等的数据（连接条件相等的数据）
+
+  
+
+- 取得员工和所属的领导的姓名
+
+  `mysql> select e.ename,m.ename from emp e,emp m where e.mgr = m.empno;`
+
+  以上称为“自连接”，只有一张表连接，具体的查询方法，把一张表看作两张表即可，如以上示例：第一个表emp e代码了员工表，emp m代表了领导表，相当于员工表和部门表一样
 
 
 
 
 
+### SQL99 语法
+
+---
+
+
+
+- （**内连接**）显示薪水大于2000的员工信息，并显示所属的部门名称
+
+  - 采用SQL92语法：
+
+    `select e.ename, e.sal, d.dname from emp e, dept d where e.deptno=d.deptno and  e.sal > 2000;`
+
+  
+
+  - 采用SQL99语法：
+
+    `select e.ename, e.sal, d.dname from emp e join dept d on e.deptno=d.deptno where e.sal>2000;`
+
+    `select e.ename, e.sal, d.dname from emp e inner join dept d on e.deptno=d.deptno where e.sal>2000;`在实际中一般不加inner关键字
+
+    
+
+  Sql92语法和sql99语法的区别：99语法可以做到表的连接和查询条件分离，特别是多个表进行连接的时候，会比sql92更清晰
+
+  
+
+- （**外连接**）显示员工信息，并显示所属的部门名称，如果某一个部门没有员工，那么该部门也必须显示出来
+
+  - 左连接 
+
+    `select e.ename, e.sal, d.dname from emp e right join dept d on e.deptno=d.deptno;`
+
+  - 右连接
+
+    `select e.ename, e.sal, d.dname from dept d left join emp e on e.deptno=d.deptno;`
+
+
+
+#### 连接分类
+
+##### 内连接
+
+- 表1  inner join  表2  on  关联条件
+- 做连接查询的时候一定要写上关联条件
+- inner 可以省略
+
+##### 外连接
+
+- 左外连接
+
+  表1  left  outer  join  表2  on  关联条件
+
+  做连接查询的时候一定要写上关联条件
+
+
+
+* 右外连接.
+
+  outer  可以省略*右外连接
+
+  表1  right  outer  join  表2  on  关联条件
+
+  做连接查询的时候一定要写上关联条件
+
+  outer  可以省略
+
+  
+
+
+
+##### 左外连接（左连接）和右外连接（右连接）的区别：
+
+- 左连接以左面的表为准和右边的表比较，和左表相等的不相等都会显示出来，右表符合条件的显示,不符合条件的不显示
+- 右连接恰恰相反，以上左连接和右连接也可以加入outer关键字，但一般不建议这种写法，
+
+
+
+```mysql
+select e.ename, e.sal, d.dname from emp e right outer join dept d on e.deptno=d.deptno;
+select e.ename, e.sal, d.dname from dept d left outer join emp e on e.deptno=d.deptno;
+```
 
 
 
 
 
+## 子查询
+
+子查询就是嵌套的select语句，可以理解为子查询是一张表
+
+
+
+### 在where语句中使用子查询，也就是在where语句中加入select语句
+
+---
+
+- 查询员工信息，查询哪些人是管理者，要求显示出其员工编号和员工姓名
+
+  - 首先取得管理者的编号，去除重复的
+
+    `mysql> select distinct mgr from emp where mgr is not null;`
+
+  - 查询员工编号包含管理者编号的
+
+    `mysql> select empno,ename from emp where empno in(select mgr from emp where mgr is not null);`
+
+  - 查询哪些人的薪水高于员工的平均薪水，需要显示员工编号，员工姓名，薪水
+
+    实现思路
+
+    1. 取得平均薪水
+
+       `mysql> select avg(sal) from emp;`
+
+    2. 取得薪水大于平均薪水的员工 
+
+       `mysql> select empno,ename,sal from emp where sal > (select avg(sal) from emp);`
 
 
 
 
 
+### 在from语句中使用子查询，可以将该子查询看做一张表
+
+---
+
+- 查询员工信息，查询哪些人是管理者，要求显示出其员工编号和员工姓名
+
+  1. 首先取得管理者的编号，去除重复的
+
+     `mysql> select distinct mgr from emp where mgr is not null;`
+
+  2. 将以上查询作为一张表，放到from语句的后面
+
+     ```mysql
+     使用92语法：
+     select e.empno, e.ename from emp e, (select distinct mgr from emp where mgr is not null) m where e.empno=m.mgr;
+     使用99语法：
+     select e.empno, e.ename from emp e join (select distinct mgr from emp where mgr is not null) m on e.empno=m.mgr;
+     ```
+
+     
+
+- 查询各个部门的平均薪水所属等级，需要显示部门编号，平均薪水，等级编号实现思路
+
+  1. 首先取得各个部门的平均薪水
+
+     `mysql>  select deptno ,avg(sal) avg_sal from emp group by deptno;`
+
+  2. 将部门的平均薪水作为一张表与薪水等级表建立连接，取得等级
+
+     `select a.deptno,a.avg_sal,g.grade from (select deptno,avg(sal) avg_sal from emp group by deptno ) a join salgrade g on a.avg_sal between g.losal and hisal;`
+
+     
+
+- 在select语句中使用子查询
+
+  1. 查询员工信息，并显示出员工所属的部门名称
+
+     ```mysql
+     第一种做法，将员工表和部门表连接
+     select e.ename, d.dname from emp e, dept d where e.deptno=d.deptno;
+     第二种做法，在select语句中再次嵌套select语句完成部分名称的查询
+     select e.ename, (select d.dname from dept d where e.deptno=d.deptno) as dname from emp e;
+     ```
 
 
 
 
 
+## Union
 
 
 
+### union可以合并集合（相加）
 
+---
 
 
 
